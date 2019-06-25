@@ -32,6 +32,7 @@
     "start:no-mock": "cross-env MOCK=none umi dev",
     "test": "umi test",
     "test:all": "node ./tests/run-tests.js",
+    sss
     "test:component": "umi test ./src/components"
   },
   "husky": {
