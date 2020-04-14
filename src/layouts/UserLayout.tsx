@@ -1,19 +1,19 @@
-import { ConnectProps, ConnectState } from '@/models/connect';
 import { DefaultFooter, MenuDataItem, getMenuData, getPageTitle } from '@ant-design/pro-layout';
-import DocumentTitle from 'react-document-title';
-import Link from 'umi/link';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
+import { Link, useIntl, ConnectProps, connect } from 'umi';
 import React from 'react';
 import SelectLang from '@/components/SelectLang';
-import { connect } from 'dva';
-import { formatMessage } from 'umi-plugin-react/locale';
+import { ConnectState } from '@/models/connect';
 import logo from '../assets/logo.svg';
 import styles from './UserLayout.less';
 
-export interface UserLayoutProps extends ConnectProps {
-  breadcrumbNameMap: { [path: string]: MenuDataItem };
+export interface UserLayoutProps extends Partial<ConnectProps> {
+  breadcrumbNameMap: {
+    [path: string]: MenuDataItem;
+  };
 }
 
-const UserLayout: React.SFC<UserLayoutProps> = props => {
+const UserLayout: React.FC<UserLayoutProps> = (props) => {
   const {
     route = {
       routes: [],
@@ -26,17 +26,21 @@ const UserLayout: React.SFC<UserLayoutProps> = props => {
       pathname: '',
     },
   } = props;
+  const { formatMessage } = useIntl();
   const { breadcrumb } = getMenuData(routes);
-
+  const title = getPageTitle({
+    pathname: location.pathname,
+    formatMessage,
+    breadcrumb,
+    ...props,
+  });
   return (
-    <DocumentTitle
-      title={getPageTitle({
-        pathname: location.pathname,
-        breadcrumb,
-        formatMessage,
-        ...props,
-      })}
-    >
+    <HelmetProvider>
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={title} />
+      </Helmet>
+
       <div className={styles.container}>
         <div className={styles.lang}>
           <SelectLang />
@@ -55,10 +59,8 @@ const UserLayout: React.SFC<UserLayoutProps> = props => {
         </div>
         <DefaultFooter />
       </div>
-    </DocumentTitle>
+    </HelmetProvider>
   );
 };
 
-export default connect(({ settings }: ConnectState) => ({
-  ...settings,
-}))(UserLayout);
+export default connect(({ settings }: ConnectState) => ({ ...settings }))(UserLayout);
