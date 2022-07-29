@@ -1,15 +1,29 @@
+import { useIntl } from '@umijs/max';
 import { Button, message, notification } from 'antd';
-
-import React from 'react';
-import { formatMessage } from 'umi';
 import defaultSettings from '../config/defaultSettings';
 
 const { pwa } = defaultSettings;
+const isHttps = document.location.protocol === 'https:';
+
+const clearCache = () => {
+  // remove all caches
+  if (window.caches) {
+    caches
+      .keys()
+      .then((keys) => {
+        keys.forEach((key) => {
+          caches.delete(key);
+        });
+      })
+      .catch((e) => console.log(e));
+  }
+};
+
 // if pwa is true
 if (pwa) {
   // Notify user if offline now
   window.addEventListener('sw.offline', () => {
-    message.warning(formatMessage({ id: 'app.pwa.offline' }));
+    message.warning(useIntl().formatMessage({ id: 'app.pwa.offline' }));
   });
 
   // Pop up a prompt on the page asking the user if they want to use the latest version
@@ -34,8 +48,9 @@ if (pwa) {
         };
         worker.postMessage({ type: 'skip-waiting' }, [channel.port2]);
       });
-      // Refresh current page to use the updated HTML and other assets after SW has skiped waiting
-      window.location.reload(true);
+
+      clearCache();
+      window.location.reload();
       return true;
     };
     const key = `open${Date.now()}`;
@@ -47,18 +62,18 @@ if (pwa) {
           reloadSW();
         }}
       >
-        {formatMessage({ id: 'app.pwa.serviceworker.updated.ok' })}
+        {useIntl().formatMessage({ id: 'app.pwa.serviceworker.updated.ok' })}
       </Button>
     );
     notification.open({
-      message: formatMessage({ id: 'app.pwa.serviceworker.updated' }),
-      description: formatMessage({ id: 'app.pwa.serviceworker.updated.hint' }),
+      message: useIntl().formatMessage({ id: 'app.pwa.serviceworker.updated' }),
+      description: useIntl().formatMessage({ id: 'app.pwa.serviceworker.updated.hint' }),
       btn,
       key,
-      onClose: async () => {},
+      onClose: async () => null,
     });
   });
-} else if ('serviceWorker' in navigator) {
+} else if ('serviceWorker' in navigator && isHttps) {
   // unregister service worker
   const { serviceWorker } = navigator;
   if (serviceWorker.getRegistrations) {
@@ -72,12 +87,5 @@ if (pwa) {
     if (sw) sw.unregister();
   });
 
-  // remove all caches
-  if (window.caches && window.caches.keys) {
-    caches.keys().then((keys) => {
-      keys.forEach((key) => {
-        caches.delete(key);
-      });
-    });
-  }
+  clearCache();
 }

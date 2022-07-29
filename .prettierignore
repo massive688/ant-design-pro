@@ -1,5 +1,4 @@
 **/*.svg
-package.json
 .umi
 .umi-production
 /dist
@@ -20,3 +19,4 @@ yarn-error.log
 .history
 CNAME
 /build
+/public
